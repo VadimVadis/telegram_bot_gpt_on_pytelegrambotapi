@@ -3,8 +3,9 @@ import json
 import telebot
 import openai
 
+# Токены
 bot = telebot.TeleBot("5941193514:AAHaI47TlkBSYAjoDsontrkEmgM493vJyTA", parse_mode=None)
-openai.api_key = "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"
+openai.api_key = "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"
 
 
 def call_openai_api(*args, **kwargs):
@@ -14,26 +15,42 @@ def call_openai_api(*args, **kwargs):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.send_message(message.chat.id, f'~~Здравствуй! Я Chat GPT bot~~\n\n'
-                                      f'° - "/quest + запрос" - Задать вопрос,\n'
+                                      f'° - Просто задай мне вопрос\n'
                                       f'~~~~~~~~~~~~~~~~')
 
 
-@bot.message_handler(commands=['quest'], func=lambda message: True)
+# Получение полного запроса на основе предыдущих
+def get_prompt(data):
+    prompt = ""
+    for i in data:
+        prompt += i["question"] + "\n" + i["answer"] + "\n"
+    return prompt
+
+
+@bot.message_handler(content_types=['text'])
 def quest(message):
     bot.send_message(message.chat.id, "Запрос обрабатывается...")
-    print(message.text)
-    completion = call_openai_api(model="gpt-3.5-turbo", messages=[
-        {"role": "user", "content": message.text[7:]}
-    ])
-    print(message.text[7:])
-    with open('data.json') as f:
-        data = json.load(f)
+    # Открытие json файла
+    with open('data.json', 'rb') as file:
+        json_bytes = file.read()
+    json_str = json_bytes.decode('utf-8')
+    data = json.loads(json_str)
     if str(message.chat.id) in data["users"]:
-        data["users"][message.chat.id].append({"question": str(message.text[7:]),
-                                               "answer": completion.choices[0].message.content})
+        prompt = get_prompt(data["users"][str(message.chat.id)])
+        prompt += message.text
     else:
-        data["users"][message.chat.id] = [{"question": str(message.text[7:]),
-                                           "answer": completion.choices[0].message.content}]
+        prompt = message.text
+    completion = call_openai_api(model="gpt-3.5-turbo", messages=[
+        {"role": "user", "content": prompt}
+    ])
+
+    # Заполнение json файла
+    if str(message.chat.id) in data["users"]:
+        data["users"][str(message.chat.id)].append({"question": str(message.text),
+                                                    "answer": completion.choices[0].message.content})
+    else:
+        data["users"][str(message.chat.id)] = [{"question": str(message.text),
+                                                "answer": completion.choices[0].message.content}]
     with open("data.json", "w", encoding='utf8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     bot.send_message(message.chat.id, completion.choices[0].message.content)
