@@ -4,8 +4,8 @@ import telebot
 import openai
 
 # Токены
-bot = telebot.TeleBot("5941193514:AAHaI47TlkBSYAjoDsontrkEmgM493vJyTA", parse_mode=None)
-openai.api_key = "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"
+bot = telebot.TeleBot("", parse_mode=None)
+openai.api_key = ""
 
 
 def call_openai_api(*args, **kwargs):
