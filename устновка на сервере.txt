@@ -1,0 +1,6 @@
+Установка бота на сервере Ubuntu:
+Прописываем следующие команды:
+1)sudo apt install python3.11
+2)git clone https://github.com/VadimVadis/telegram_bot_gpt_on_pytelegrambotapi
+3)pip install -r /path/to/requirements.txt (необходимо ввести путь к файлу)
+4)python telegram_bot.py
